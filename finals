@@ -1,26 +1,26 @@
-import os
-import time
+import os # os is a built-in module that lets Python talk to the operating system
+import time # time is a built-in module that lets Python pause for a while
 
 
 # settings
-LESSON_PASS_MARK = 2
-FINAL_PASS_MARK = 7
+LESSON_PASS_MARK = 2 # minimum score to pass the lessons
+FINAL_PASS_MARK = 7 # minimum score to pass the final quiz
 
 
 # helper functions
 # screen basics
-def clear_screen():
+def clear_screen():             # def or define is how we create a function or a brand new command
     if os.name == "nt":         # "nt" means Windows
-        os.system("cls")
+        os.system("cls")        # cls is the command to clear the screen in Windows
     else:
-        os.system("clear")
+        os.system("clear")      # clear is the command to clear the screen in Linux and Mac
 
 
 def pause(message="Press Enter to continue..."):
-    input("\n" + message)
+    input("\n" + message)       # message "parameter" or "placeholder"
 
 
-def show_banner(text):
+def show_banner(text):          # show_banner function that prints a centered title box
     print("=" * 50)
     print(text.center(50))      # center() puts the text in the middle
     print("=" * 50)
@@ -28,20 +28,20 @@ def show_banner(text):
 
 # transitions
 def transition_in(title, subtitle):
-    """The title appears, then a line grows across the screen."""
-    clear_screen()
-    print("\n" * 8)
-    print(title.center(50))
-    print(subtitle.center(50))
+    """Title appears, then a line grows across the screen."""
+    clear_screen()              # clear the screen before showing the title and subtitle
+    print("\n" * 8)             # print 8 blank lines to push the title and subtitle down the screen
+    print(title.center(50))     # center() puts the text in the middle of a 50-character wide line
+    print(subtitle.center(50))  
     print()
-    for length in range(0, 51, 2):
+    for length in range(0, 51, 2):                   # the line grows from 0 to 50, in steps of 2
         print("=" * length, end="\r", flush=True)    # flush=True shows it right away
-        time.sleep(0.02)
-    time.sleep(0.5)
+        time.sleep(0.02)                             # pause before the next step
+    time.sleep(0.5)                                  # pausebefore clearing the screen
     clear_screen()
 
 
-def transition_out(message):
+def transition_out(message):    # transition_out function that shows a message and shrinks a line across the screen
     """A message appears, then the line shrinks away."""
     clear_screen()
     print("\n" * 8)
