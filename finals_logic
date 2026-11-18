@@ -1,3 +1,47 @@
-Welcome screen → ask name → MAIN MENU (loop) ─┬─ Lessons 1–7 (lesson → quiz → pass/fail)
-                                               ├─ Final quiz (locked until all 7 passed) → certificate
-                                               └─ Exit
+Python Zero
+
+Flow: Welcome screen → enter name → main menu loop → lessons 1–7 (each with a quiz) → final quiz (unlocked after all 7) → certificate → exit.
+
+Setup
+LESSON_PASS_MARK = 2 (out of 3) and FINAL_PASS_MARK = 7 (out of 10).
+os clears the screen, time adds animation delays.
+Helper functions
+Screen: clear_screen runs cls or clear depending on the OS. pause waits for Enter. show_banner prints a centered title between = lines.
+Transitions: transition_in and transition_out animate a line growing or shrinking using end="\r" to overwrite the same line.
+Display: show_part prints a lesson screen line by line. show_code prints code, with or without line numbers. show_question prints the question header.
+Input checks:
+has_letters: name must contain at least one letter.
+is_number_answer: tells numeric answers from text answers.
+get_letter: loops until the user enters A, B, or C.
+get_typed_answer: loops until the answer is non-empty and the right type (number vs. text).
+show_result: shows Correct or Not quite, plus the explanation.
+Question types
+
+Each returns True or False.
+
+multiple_choice: pick A, B, or C and compare to the answer.
+fix_error: type the corrected line. Spaces are ignored and ' equals ".
+try_code: run the code yourself and type the output. Spaces, commas, and capitals are ignored.
+Lessons
+
+Every lesson follows one pattern:
+
+Transition in
+Show the lesson parts
+Start the quiz with score = 0
+Add 1 for each question that returns True
+finish_quiz(score) returns pass or fail (2 or more passes)
+
+The final quiz works the same way with 10 questions, but it returns the raw score and the menu decides pass or fail.
+
+Main program
+Memory: completed (passed lesson numbers), final_passed, final_score.
+Name entry: loops until the name is not empty and has a letter.
+Menu loop (while True):
+Show the menu with [X] or [ ] for each lesson, and the final quiz as locked, unlocked, or done.
+Read the choice. If it isn’t all digits, show an error and loop back.
+Convert to int and branch:
+1–7: run the lesson. If passed and not already in completed, add it.
+8: only runs if all 7 are completed. A score of 7 or more shows the certificate.
+0: break ends the program.
+Anything else: invalid choice.
