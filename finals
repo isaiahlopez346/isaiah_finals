@@ -1,0 +1,1111 @@
+import os
+import time
+
+
+# settings
+LESSON_PASS_MARK = 2
+FINAL_PASS_MARK = 7
+
+
+# helper functions
+# screen basics
+def clear_screen():
+    if os.name == "nt":         # "nt" means Windows
+        os.system("cls")
+    else:
+        os.system("clear")
+
+
+def pause(message="Press Enter to continue..."):
+    input("\n" + message)
+
+
+def show_banner(text):
+    print("=" * 50)
+    print(text.center(50))      # center() puts the text in the middle
+    print("=" * 50)
+
+
+# transitions
+def transition_in(title, subtitle):
+    """The title appears, then a line grows across the screen."""
+    clear_screen()
+    print("\n" * 8)
+    print(title.center(50))
+    print(subtitle.center(50))
+    print()
+    for length in range(0, 51, 2):
+        print("=" * length, end="\r", flush=True)    # flush=True shows it right away
+        time.sleep(0.02)
+    time.sleep(0.5)
+    clear_screen()
+
+
+def transition_out(message):
+    """A message appears, then the line shrinks away."""
+    clear_screen()
+    print("\n" * 8)
+    print(message.center(50))
+    print()
+    time.sleep(0.5)
+    for length in range(50, -1, -2):
+        print("=" * length + " " * (50 - length), end="\r", flush=True)
+        time.sleep(0.02)
+    clear_screen()
+
+
+# showing lessons and questions
+def show_part(title, part, total_parts, lines):
+    """Show one part of a lesson, line by line."""
+    clear_screen()
+    show_banner(title)
+    print(f"Part {part} of {total_parts}\n")
+
+    for line in lines:
+        print(line)
+        time.sleep(0.08)
+
+    if part < total_parts:
+        pause("Press Enter for the next part...")
+    else:
+        pause("Press Enter to continue to the quiz...")
+
+
+def show_code(code, numbered):
+    """Print code lines. Line numbers are shown when numbered is True."""
+    line_number = 1
+    for line in code:
+        if numbered == True:
+            print(f"   {line_number} | {line}")
+        else:
+            print(f"     {line}")
+        line_number = line_number + 1
+    print()
+
+
+def show_question(number, label, question):
+    clear_screen()
+    print(f"QUESTION {number}   |   {label}")
+    print("-" * 50)
+    print()
+    print(question)
+    print()
+
+
+# input checking
+def has_letters(text):
+    """True if the text has at least one letter in it."""
+    for character in text:
+        if character.isalpha():
+            return True
+    return False
+
+
+def is_number_answer(text):
+    """True if the text is made of numbers only (digits, spaces, commas, - and .)."""
+    for character in text:
+        if character not in "0123456789 ,.-":
+            return False
+    return True
+
+
+def get_letter():
+    """Keep asking until the learner types A, B or C."""
+    letter = ""
+    while letter not in ["a", "b", "c"]:
+        # strip() removes extra spaces, lower() makes it a small letter
+        letter = input("\nYour answer (A, B or C): ").strip().lower()
+
+        if letter not in ["a", "b", "c"]:
+            print("Invalid input. Please try again.")
+    return letter
+
+
+def get_typed_answer(prompt, correct):
+    """Keep asking until the learner types a usable answer.
+    If the right answer is numbers, the learner must type numbers.
+    If the right answer is text, the learner must type text."""
+    wants_number = is_number_answer(correct)
+
+    while True:
+        reply = input(prompt).strip()
+
+        if reply != "" and is_number_answer(reply) == wants_number:
+            return reply
+
+        print("Invalid input. Please try again.")
+
+
+def show_result(is_correct, right_answer, explain):
+    if is_correct == True:
+        print("\nCorrect!")
+    else:
+        print("\nNot quite. The answer is: " + right_answer)
+    print(explain)
+    pause()
+
+
+# certificate
+def space_out(text):
+    """Put a space between the letters, for example PYTHON becomes P Y T H O N."""
+    spaced = ""
+    for letter in text:
+        spaced = spaced + letter + " "
+    return spaced.strip()
+
+
+def make_certificate(name, score, date_text):
+    """Draw the certificate in the terminal, line by line."""
+    inner = 64                  # the width of the space inside the borders
+    percent = score * 10
+
+    # the name in capital letters, with spaces between the letters
+    name_text = space_out(name.upper())
+    if len(name_text) > inner - 4:          # too long? use the normal name
+        name_text = name.upper()[:inner - 4]
+
+    # the line under the name
+    underline_length = len(name_text) + 6
+    if underline_length > inner - 8:
+        underline_length = inner - 8
+
+    lines = [
+        "",
+        "*  *  *     " + space_out("PYTHON ZERO") + "     *  *  *",
+        "",
+        space_out("CERTIFICATE OF COMPLETION"),
+        "─" * 30,
+        "",
+        "This certifies that",
+        "",
+        name_text,
+        "═" * underline_length,
+        "",
+        "has successfully completed all seven lessons",
+        "and passed the final quiz of",
+        "",
+        "PYTHON ZERO",
+        "From Zero Knowledge to Coding Skills",
+        "",
+        "Introduction to Programming  *  Python Basic Syntax",
+        "Arithmetic Operators and Expressions",
+        "Basic Input and Output  *  Conditional Statements",
+        "Logical Operators  *  Iteration and Loops",
+        "",
+        "─" * 30,
+        "",
+        f"Date: {date_text}",
+        f"Final quiz score: {score} / 10  ({percent}%)",
+        "",
+        "*  *  *",
+        "",
+    ]
+
+    clear_screen()
+    print()
+    print("╔" + "═" * (inner + 4) + "╗")
+    print("║ ┌" + "─" * inner + "┐ ║")
+    for line in lines:
+        print("║ │" + line.center(inner) + "│ ║")      # center() puts the text in the middle
+        time.sleep(0.05)
+    print("║ └" + "─" * inner + "┘ ║")
+    print("╚" + "═" * (inner + 4) + "╝")
+
+    print("\nTip: take a screenshot to keep a copy of your certificate.")
+
+# quizzes
+# The four kinds of questions. Each one gives back True (right) or False (wrong).
+def multiple_choice(number, label, question, code, a, b, c, answer, explain):
+    """Used for concept checks and for 'find the error' questions."""
+    show_question(number, label, question)
+    if len(code) > 0:
+        show_code(code, True)
+
+    print("   A. " + a)
+    print("   B. " + b)
+    print("   C. " + c)
+    letter = get_letter()
+
+    # the text of the right answer, shown when the learner is wrong
+    if answer == "a":
+        right_text = "A. " + a
+    elif answer == "b":
+        right_text = "B. " + b
+    else:
+        right_text = "C. " + c
+
+    is_correct = letter == answer
+    show_result(is_correct, right_text, explain)
+    return is_correct
+
+
+def fix_error(number, question, code, correct, explain):
+    """The learner types the corrected line."""
+    show_question(number, "Fix the error", question)
+    show_code(code, True)
+    reply = get_typed_answer("Type the corrected line: ", correct)
+
+    # ignore extra spaces, and treat ' and " as the same
+    your_answer = reply.replace(" ", "").replace("'", '"')
+    right_answer = correct.replace(" ", "").replace("'", '"')
+
+    is_correct = your_answer == right_answer
+    show_result(is_correct, correct, explain)
+    return is_correct
+
+
+def try_code(number, question, code, correct, explain):
+    """The learner runs the code in their editor and types what it shows."""
+    show_question(number, "Try it yourself", question)
+    show_code(code, False)
+    print("(Run the code yourself, then type what it shows.)")
+    reply = get_typed_answer("\nYour answer: ", correct)
+
+    # ignore spaces, commas and capital letters
+    your_answer = reply.replace(" ", "").replace(",", "").lower()
+    right_answer = correct.replace(" ", "").replace(",", "").lower()
+
+    is_correct = your_answer == right_answer
+    show_result(is_correct, correct, explain)
+    return is_correct
+
+
+# quiz introduction and results
+def start_quiz(number, title):
+    clear_screen()
+    show_banner(f"QUIZ: LESSON {number}")
+    print("\n" + title)
+    print(f"\n3 questions. You need {LESSON_PASS_MARK} correct to pass.")
+    print("Some questions ask you to find errors, fix code, or try code yourself,")
+    print("so have your code editor open and ready.")
+    pause("Press Enter to start the quiz...")
+
+
+def finish_quiz(score):
+    """Show the results. Gives back True if the learner passed."""
+    clear_screen()
+    show_banner("QUIZ RESULTS")
+    print(f"\nYou scored {score} out of 3.")
+
+    if score >= LESSON_PASS_MARK:
+        print("\nYou passed this lesson!")
+        passed = True
+    else:
+        print("\nNot enough to pass this time.")
+        print("Read the lesson again and give it another try.")
+        passed = False
+
+    pause("Press Enter to go back to the menu...")
+    transition_out("Returning to the menu...")
+    return passed
+
+
+# lessons
+# Every lesson: transition in -> its parts -> transition out -> quiz.
+# It gives back True if the learner passed the quiz.
+# lesson 1
+def lesson_1():
+    # introduction
+    title = "LESSON 1: Introduction to Programming"
+    transition_in("LESSON 1", "Introduction to Programming")
+
+    # lesson parts
+    show_part(title, 1, 3, [
+        "Programming Language",
+        "- A special language that computers can understand, and one of them is PYTHON!",
+        "",
+        "What is Python Programming?",
+        "- Created by a Dutch software engineer, Guido van Rossum, in 1991.",
+        "- Python was designed to read like the English language.",
+    ])
+    show_part(title, 2, 3, [
+        "Integrated Development Environment (IDE)",
+        "- An IDE is a software application that gives programmers a single,",
+        "  combined space to write, test, and debug their code.",
+        "- An example of an IDE is Visual Studio Code, which is the application",
+        "  that I used to create this knowledge hub.",
+    ])
+    show_part(title, 3, 3, [
+        "Your First Program",
+        "- Open your IDE and create a new file called hello.py",
+        "- Type this line, save the file, and run it:",
+        "",
+        '    print("Hello, Python!")',
+        "",
+        "- Congratulations, that is a real Python program!",
+    ])
+
+    # quiz
+    transition_out("Time for the quiz")
+    start_quiz(1, "Introduction to Programming")
+
+    score = 0
+
+    # question 1 - concept check
+    if multiple_choice(1, "Concept check",
+                       "Which programming language did Guido van Rossum create in 1991?", [],
+                       "Java", "Python", "C++", "b",
+                       "Python was created by Guido van Rossum and designed to read like English."):
+        score = score + 1
+
+    # question 2 - concept check
+    if multiple_choice(2, "Concept check",
+                       "Which of these is an example of an IDE?", [],
+                       "Google Chrome", "Microsoft Paint", "Visual Studio Code", "c",
+                       "An IDE gives programmers one place to write, test and debug code."):
+        score = score + 1
+
+    # question 3 - try it yourself
+    if try_code(3,
+                "Open your IDE and create a file called hello.py. Type the code below,\n"
+                "save it and run it. What does it show on the screen?",
+                ['print("Hello, Python!")'],
+                "Hello, Python!",
+                "print() shows whatever is inside the parentheses on the screen."):
+        score = score + 1
+
+    return finish_quiz(score)
+
+
+# lesson 2
+def lesson_2():
+    # introduction
+    title = "LESSON 2: Python Basic Syntax"
+    transition_in("LESSON 2", "Python Basic Syntax")
+
+    # lesson parts
+    show_part(title, 1, 4, [
+        "What is Python Syntax?",
+        "- Syntax refers to the rules that tell us how to correctly write a program.",
+        "",
+        "1. Python is Case-Sensitive",
+        "- Python treats upper case and lower case letters differently.",
+        "  (basically J and j are different values in Python)",
+    ])
+    show_part(title, 2, 4, [
+        "2. Indentation",
+        "- The spaces or tabs you put at the very beginning of a line of code.",
+        "",
+        "Printing Output",
+        "- The print() function displays output.",
+        "- The parentheses contain the information to be displayed.",
+        "- value - the text, number, variable, or expression you want to show.",
+        "",
+        "Example:",
+        '    print("Hello, World!")',
+    ])
+    show_part(title, 3, 4, [
+        "Python Comments",
+        "- Comments are notes you add to your code that are not executed",
+        "  by the Python interpreter.",
+        "- They are used to explain what your code does or to temporarily",
+        "  disable parts of your code.",
+        "- In Python, comments start with the '#' symbol. Anything after the '#'",
+        "  on that line is considered a comment.",
+        "",
+        "Example:",
+        "    # This is a comment",
+    ])
+    show_part(title, 4, 4, [
+        "When Something Goes Wrong",
+        "- Break a syntax rule and Python shows an error message.",
+        "- The message tells you which line to look at.",
+        "",
+        "Common mistakes:",
+        "  - Wrong capital letters:    Print(...)  instead of  print(...)",
+        '  - A missing parenthesis:    print("Hi"',
+        '  - A missing closing quote:  print("Hi)',
+        "",
+        "- Finding and fixing errors is called debugging. Every programmer does it!",
+    ])
+
+    # quiz
+    transition_out("Time for the quiz")
+    start_quiz(2, "Python Basic Syntax")
+
+    score = 0
+
+    # question 1 - concept check
+    if multiple_choice(1, "Concept check",
+                       "Python is case-sensitive. Are the names Name and name the same?", [],
+                       "No, they are different", "Yes, they are the same", "Only inside print()", "a",
+                       "Python treats upper case and lower case letters as different."):
+        score = score + 1
+
+    # question 2 - fix the error
+    if fix_error(2,
+                 "This line has an error. Type the corrected line.",
+                 ['Print("Hello, World!")'],
+                 'print("Hello, World!")',
+                 "Python is case-sensitive, so the function must be written as print."):
+        score = score + 1
+
+    # question 3 - find the error
+    if multiple_choice(3, "Find the error",
+                       "Which line has the error?",
+                       ["# Show a greeting", 'name = "Ana"', "// print the name", "print(name)"],
+                       "Line 2", "Line 3", "Line 4", "b",
+                       "Python comments start with #, not //."):
+        score = score + 1
+
+    return finish_quiz(score)
+
+
+# lesson 3
+def lesson_3():
+    # introduction
+    title = "LESSON 3: Arithmetic Operators and Expressions"
+    transition_in("LESSON 3", "Arithmetic Operators and Expressions")
+
+    # lesson parts
+    show_part(title, 1, 4, [
+        "Arithmetic Operators",
+        "- Symbols that tell Python to do math.",
+        "",
+        "  +    Addition          5 + 3     gives  8",
+        "  -    Subtraction       5 - 3     gives  2",
+        "  *    Multiplication    5 * 3     gives  15",
+        "  /    Division          10 / 4    gives  2.5",
+        "  //   Floor division    10 // 4   gives  2",
+        "  %    Modulus           10 % 4    gives  2  (the remainder)",
+        "  **   Exponent          2 ** 3    gives  8",
+    ])
+    show_part(title, 2, 4, [
+        "Expressions and PEMDAS",
+        "- An expression is a mix of values and operators that Python calculates.",
+        "- Python follows PEMDAS, the same order of operations used in math class.",
+        "",
+        "  1st   P   Parentheses                 ( )",
+        "  2nd   E   Exponents                   **",
+        "  3rd   MD  Multiplication, Division    *  /  //  %",
+        "  4th   AS  Addition, Subtraction       +  -",
+        "",
+        "- Operators on the same level are solved from LEFT to RIGHT.",
+        "    print(10 - 4 + 2)        # shows 8",
+        "    print(20 / 5 * 2)        # shows 8.0",
+    ])
+    show_part(title, 3, 4, [
+        "PEMDAS Step by Step",
+        "",
+        "    print(2 + 3 * (4 - 1) ** 2)",
+        "",
+        "  Step 1  Parentheses:      (4 - 1)  becomes  3     2 + 3 * 3 ** 2",
+        "  Step 2  Exponents:        3 ** 2   becomes  9     2 + 3 * 9",
+        "  Step 3  Multiplication:   3 * 9    becomes  27    2 + 27",
+        "  Step 4  Addition:         2 + 27   becomes  29    29",
+        "",
+        "- Python shows 29.",
+        "- Want a different order? Use parentheses:  (2 + 3) * 4  gives 20.",
+    ])
+    show_part(title, 4, 4, [
+        "Using Variables in Math",
+        "- A variable stores a value so we can reuse it.",
+        "",
+        "    price = 50",
+        "    quantity = 3",
+        "    total = price * quantity",
+        "    print(total)           # shows 150",
+        "",
+        "- Tip: a number % 2 gives 0 for even numbers and 1 for odd numbers.",
+    ])
+
+    # quiz
+    transition_out("Time for the quiz")
+    start_quiz(3, "Arithmetic Operators and Expressions")
+
+    score = 0
+
+    # question 1 - try it yourself
+    if try_code(1,
+                "Run this code in your IDE. What does it show?",
+                ["print(100 - 5 * 2 ** 3)"],
+                "60",
+                "PEMDAS: 2 ** 3 is 8, then 5 * 8 is 40, then 100 - 40 is 60."):
+        score = score + 1
+
+    # question 2 - concept check
+    if multiple_choice(2, "Concept check",
+                       "Python follows PEMDAS. What is the result of 8 + 2 * 3?", [],
+                       "30", "14", "16", "b",
+                       "Multiplication comes before addition: 2 * 3 is 6, then 8 + 6 is 14."):
+        score = score + 1
+
+    # question 3 - find the error
+    if multiple_choice(3, "Find the error",
+                       "Which line has the error?",
+                       ["price = 50", "quantity = 3", "total = price x quantity", "print(total)"],
+                       "Line 2", "Line 3", "Line 4", "b",
+                       "Multiplication in Python is *, not x. Fix: total = price * quantity"):
+        score = score + 1
+
+    return finish_quiz(score)
+
+
+# lesson 4
+def lesson_4():
+    # introduction
+    title = "LESSON 4: Basic Input and Output in Python"
+    transition_in("LESSON 4", "Basic Input and Output in Python")
+
+    # lesson parts
+    show_part(title, 1, 3, [
+        "Output with print()",
+        "- print() shows information on the screen.",
+        "",
+        '    print("Hello!")',
+        '    print("My name is", "Ana")      # shows: My name is Ana',
+        "",
+        "f-strings: put variables inside your text",
+        "",
+        '    name = "Ana"',
+        '    print(f"Hello, {name}!")        # shows: Hello, Ana!',
+        "",
+        "- Put an f before the quotes, then put the variable inside { }.",
+    ])
+    show_part(title, 2, 3, [
+        "Input with input()",
+        "- input() asks the user to type something.",
+        "",
+        '    name = input("What is your name? ")',
+        '    print(f"Nice to meet you, {name}!")',
+        "",
+        "- Whatever the user types is stored in the variable.",
+        "- input() ALWAYS gives you text (a string), even if the user types a number.",
+    ])
+    show_part(title, 3, 3, [
+        "Converting Types",
+        "- To do math with input, first convert the text into a number:",
+        "",
+        '    age = int(input("How old are you? "))',
+        '    print(f"Next year you will be {age + 1}!")',
+        "",
+        "- Converting functions:",
+        "    int()    whole number      int('25')     gives 25",
+        "    float()  decimal number    float('2.5')  gives 2.5",
+        "    str()    text              str(10)       gives '10'",
+        "",
+        "- Without int(), Python treats the age as text and the math fails.",
+    ])
+
+    # quiz
+    transition_out("Time for the quiz")
+    start_quiz(4, "Basic Input and Output in Python")
+
+    score = 0
+
+    # question 1 - concept check
+    if multiple_choice(1, "Concept check",
+                       "What kind of data does input() always give you?", [],
+                       "A whole number", "Text (a string)", "A decimal number", "b",
+                       "Even if the user types 25, input() gives you the text '25'."):
+        score = score + 1
+
+    # question 2 - fix the error
+    if fix_error(2,
+                 "Line 2 crashes because age is text, not a number.\n"
+                 "Type a corrected version of line 1.",
+                 ['age = input("How old are you? ")', "print(age + 1)"],
+                 'age = int(input("How old are you? "))',
+                 "int() converts the typed text into a whole number, so we can do math."):
+        score = score + 1
+
+    # question 3 - try it yourself
+    if try_code(3,
+                "Run this code in your IDE and type Ana when it asks for your name.\n"
+                "What does it print?",
+                ['name = input("Name: ")', 'print(f"Hello, {name}!")'],
+                "Hello, Ana!",
+                "The f before the quotes lets us place the variable inside { }."):
+        score = score + 1
+
+    return finish_quiz(score)
+
+
+# lesson 5
+def lesson_5():
+    # introduction
+    title = "LESSON 5: Conditional Statements in Python"
+    transition_in("LESSON 5", "Conditional Statements in Python")
+
+    # lesson parts
+    show_part(title, 1, 3, [
+        "Conditional Statements",
+        "- They let your program make decisions using if.",
+        "",
+        "    age = 18",
+        "    if age >= 18:",
+        '        print("You can vote!")',
+        "",
+        "- The code under the if is indented. It only runs when the condition is True.",
+        "- Don't forget the colon ( : ) at the end of the if line!",
+    ])
+    show_part(title, 2, 3, [
+        "Comparison Operators",
+        "",
+        "  ==   equal to                5 == 5    True",
+        "  !=   not equal to            5 != 3    True",
+        "  >    greater than            5 > 3     True",
+        "  <    less than               5 < 3     False",
+        "  >=   greater or equal        5 >= 5    True",
+        "  <=   less or equal           3 <= 5    True",
+        "",
+        "- Careful: = stores a value, but == compares two values.",
+    ])
+    show_part(title, 3, 3, [
+        "if, elif and else",
+        "",
+        "    score = 85",
+        "    if score >= 90:",
+        '        print("Grade A")',
+        "    elif score >= 80:",
+        '        print("Grade B")',
+        "    else:",
+        '        print("Keep practicing!")',
+        "",
+        "- This prints: Grade B",
+        "- Python checks from top to bottom and runs the FIRST one that is True.",
+        "- else runs when none of the conditions are True.",
+    ])
+
+    # quiz
+    transition_out("Time for the quiz")
+    start_quiz(5, "Conditional Statements in Python")
+
+    score = 0
+
+    # question 1 - find the error
+    if multiple_choice(1, "Find the error",
+                       "Which line has the error?",
+                       ["age = 17", "if age >= 18", '    print("Adult")', "else:", '    print("Minor")'],
+                       "Line 1", "Line 2", "Line 4", "b",
+                       "An if line must end with a colon ( : )."):
+        score = score + 1
+
+    # question 2 - fix the error
+    if fix_error(2,
+                 "Line 2 should check if score equals 90.\nType the corrected line 2.",
+                 ["score = 90", "if score = 90:", '    print("Perfect!")'],
+                 "if score == 90:",
+                 "A single = stores a value. Use == to compare two values."):
+        score = score + 1
+
+    # question 3 - try it yourself
+    if try_code(3,
+                "Run this code in your IDE. What does it print?",
+                ["x = 7", "if x > 10:", '    print("big")', "elif x > 5:",
+                 '    print("medium")', "else:", '    print("small")'],
+                "medium",
+                "7 is not greater than 10, but it is greater than 5, so the elif runs."):
+        score = score + 1
+
+    return finish_quiz(score)
+
+
+# lesson 6
+def lesson_6():
+    # introduction
+    title = "LESSON 6: Logical Operator"
+    transition_in("LESSON 6", "Logical Operator")
+
+    # lesson parts
+    show_part(title, 1, 3, [
+        "Logical Operators",
+        "- They combine conditions. The result is always True or False.",
+        "",
+        "  and   True only if BOTH conditions are True",
+        "  or    True if AT LEAST ONE condition is True",
+        "  not   flips the result (True becomes False)",
+    ])
+    show_part(title, 2, 3, [
+        "Truth Table",
+        "",
+        "  and",
+        "    True  and True     gives  True",
+        "    True  and False    gives  False",
+        "    False and False    gives  False",
+        "",
+        "  or",
+        "    True  or False     gives  True",
+        "    False or False     gives  False",
+        "",
+        "  not",
+        "    not True           gives  False",
+        "    not False          gives  True",
+    ])
+    show_part(title, 3, 3, [
+        "Using Them Together with if",
+        "",
+        "    age = 20",
+        "    has_ticket = True",
+        "",
+        "    if age >= 18 and has_ticket:",
+        '        print("Welcome in!")',
+        "",
+        "    if age < 18 or not has_ticket:",
+        '        print("Sorry, you cannot enter.")',
+        "",
+        "- The first message prints because BOTH conditions are True.",
+        "- The second does not print because neither condition is True.",
+    ])
+
+    # quiz
+    transition_out("Time for the quiz")
+    start_quiz(6, "Logical Operator")
+
+    score = 0
+
+    # question 1 - concept check
+    if multiple_choice(1, "Concept check",
+                       "Which logical operator needs BOTH conditions to be True?", [],
+                       "or", "not", "and", "c",
+                       "and is True only when both sides are True."):
+        score = score + 1
+
+    # question 2 - find the error
+    if multiple_choice(2, "Find the error",
+                       "Which line has the error?",
+                       ["age = 20", "has_ticket = True", "if age >= 18 && has_ticket:",
+                        '    print("Welcome!")'],
+                       "Line 1", "Line 3", "Line 4", "b",
+                       "Python uses the word and, not &&."):
+        score = score + 1
+
+    # question 3 - try it yourself
+    if try_code(3,
+                "Run this code in your IDE. What does it show?",
+                ["print(not (True and False))"],
+                "True",
+                "(True and False) is False, and not False is True."):
+        score = score + 1
+
+    return finish_quiz(score)
+
+
+# lesson 7
+def lesson_7():
+    # introduction
+    title = "LESSON 7: Introduction to Iteration and Loops"
+    transition_in("LESSON 7", "Introduction to Iteration and Loops")
+
+    # lesson parts
+    show_part(title, 1, 3, [
+        "Loops",
+        "- A loop repeats code so you don't have to write it again and again.",
+        "- Python has two main loops: for and while.",
+    ])
+    show_part(title, 2, 3, [
+        "The for Loop",
+        "",
+        "    for number in range(5):",
+        "        print(number)",
+        "",
+        "- This shows 0 1 2 3 4 (one number per line).",
+        "- range(5) starts at 0 and stops BEFORE 5.",
+        "- range(1, 4) gives 1, 2, 3.",
+        "",
+        "- You can also loop through a list:",
+        '    for fruit in ["apple", "banana"]:',
+        "        print(fruit)",
+    ])
+    show_part(title, 3, 3, [
+        "The while Loop",
+        "",
+        "    count = 1",
+        "    while count <= 3:",
+        "        print(count)",
+        "        count = count + 1",
+        "",
+        "- A while loop repeats AS LONG AS its condition is True.",
+        "- Always change something inside the loop, or it will run forever!",
+        "- break stops a loop early. continue skips to the next round.",
+    ])
+
+    # quiz
+    transition_out("Time for the quiz")
+    start_quiz(7, "Introduction to Iteration and Loops")
+
+    score = 0
+
+    # question 1 - concept check
+    if multiple_choice(1, "Concept check",
+                       "What numbers does range(5) produce?", [],
+                       "1 to 5", "0 to 4", "0 to 5", "b",
+                       "range(5) starts at 0 and stops before 5."):
+        score = score + 1
+
+    # question 2 - fix the error
+    if multiple_choice(2, "Fix the error",
+                       "This loop runs forever!\nWhich line should be added inside the loop to stop it?",
+                       ["count = 1", "while count <= 3:", "    print(count)"],
+                       "count = 1", "count = count + 1", 'print("stop")', "b",
+                       "count must change, or the condition stays True and the loop never ends."):
+        score = score + 1
+
+    # question 3 - try it yourself
+    if try_code(3,
+                "Run this code in your IDE. What does it print at the end?",
+                ["total = 0", "for i in range(1, 4):", "    total = total + i", "print(total)"],
+                "6",
+                "The loop adds 1, then 2, then 3, so total ends at 6."):
+        score = score + 1
+
+    return finish_quiz(score)
+
+
+# final quiz
+def final_quiz():
+    """10 questions from all the lessons. Gives back the score."""
+    # introduction
+    transition_in("FINAL QUIZ", "Everything you have learned")
+
+    show_banner("FINAL QUIZ")
+    print("\n10 questions from all 7 lessons.")
+    print(f"You need {FINAL_PASS_MARK} correct to pass.")
+    print("Have your code editor open and ready.")
+    pause("Press Enter to begin...")
+
+    # questions
+    score = 0
+
+    # question 1 - concept check
+    if multiple_choice(1, "Concept check",
+                       "Python was designed to read like which kind of language?", [],
+                       "Binary code", "English", "Morse code", "b",
+                       "Python was designed to read like the English language."):
+        score = score + 1
+
+    # question 2 - fix the error
+    if fix_error(2,
+                 "This line is missing something. Type the corrected line.",
+                 ['print("Hello"'],
+                 'print("Hello")',
+                 "Every opening parenthesis needs a closing one."):
+        score = score + 1
+
+    # question 3 - concept check
+    if multiple_choice(3, "Concept check",
+                       "What is the result of 3 + 4 * 2 ** 2?", [],
+                       "19", "28", "196", "a",
+                       "PEMDAS: 2 ** 2 is 4, then 4 * 4 is 16, then 3 + 16 is 19."):
+        score = score + 1
+
+    # question 4 - concept check
+    if multiple_choice(4, "Concept check",
+                       "What is the result of 15 // 4?", [],
+                       "3.75", "4", "3", "c",
+                       "// is floor division. It keeps only the whole number part."):
+        score = score + 1
+
+    # question 5 - find the error
+    if multiple_choice(5, "Find the error",
+                       "Which line has the error?",
+                       ["for i in range(3):", "print(i)"],
+                       "Line 1", "Line 2", "There is no error", "b",
+                       "The code inside a loop must be indented."):
+        score = score + 1
+
+    # question 6 - fix the error
+    if fix_error(6,
+                 "Line 2 has an error. Type the corrected line 2.",
+                 ["x = 5", "if x > 3 and x < 10", '    print("yes")'],
+                 "if x > 3 and x < 10:",
+                 "An if line must end with a colon ( : )."):
+        score = score + 1
+
+    # question 7 - try it yourself
+    if try_code(7,
+                "Run this code in your IDE. What does it print?",
+                ["x = 5", "if x > 3 and x < 10:", '    print("yes")', "else:", '    print("no")'],
+                "yes",
+                "Both conditions are True (5 > 3 and 5 < 10), so yes is printed."):
+        score = score + 1
+
+    # question 8 - concept check
+    if multiple_choice(8, "Concept check",
+                       "What is the result of: not (True and False)?", [],
+                       "False", "Error", "True", "c",
+                       "(True and False) is False, and not False is True."):
+        score = score + 1
+
+    # question 9 - try it yourself
+    if try_code(9,
+                "Run this code in your IDE. Type what it prints,\nwith the numbers separated by spaces.",
+                ["for i in range(1, 4):", "    print(i)"],
+                "1 2 3",
+                "range(1, 4) starts at 1 and stops before 4."):
+        score = score + 1
+
+    # question 10 - try it yourself
+    if try_code(10,
+                "Run this code in your IDE. Type what it prints,\nwith the numbers separated by spaces.",
+                ["count = 3", "while count > 0:", "    print(count)", "    count = count - 1"],
+                "3 2 1",
+                "The loop counts down from 3 and stops when count reaches 0."):
+        score = score + 1
+
+    return score
+
+
+# the program
+
+# things the program remembers
+titles = [
+    "Introduction to Programming",
+    "Python Basic Syntax",
+    "Arithmetic Operators and Expressions",
+    "Basic Input and Output in Python",
+    "Conditional Statements in Python",
+    "Logical Operator",
+    "Introduction to Iteration and Loops",
+]
+
+completed = []          # the lesson numbers the learner has passed
+final_passed = False
+final_score = 0
+
+
+# introduction
+clear_screen()
+welcome_lines = [
+    "=" * 50,
+    "PYTHON ZERO: From Zero Knowledge to Coding Skills",
+    "=" * 50,
+    "",
+    "                 YOUR GATEWAY TO",
+    "                 PYTHON MASTERY",
+    "",
+    "              LEARN | CODE | CONQUER",
+    "",
+    "   Your journey to Python mastery begins here!",
+    "",
+    "=" * 50,
+]
+for line in welcome_lines:
+    print(line)
+    time.sleep(0.08)
+
+input("           [ PRESS ENTER TO BEGIN ]")
+clear_screen()
+
+
+# ask for the name
+print("WELCOME TO PYTHON ZERO!")
+print("\nIn this knowledge hub, you will learn the fundamentals of Python programming.")
+print("And by the end of it, you will have the skills to create your own Python programs.")
+print("\nLet's embark on this exciting journey together!")
+
+name = ""
+while name == "":
+    reply = input("\nBefore we begin, please enter your name: ").strip()
+
+    if reply == "" or has_letters(reply) == False:
+        print("Invalid input. Please try again.")
+    else:
+        name = reply
+
+print(f"\nGreat to have you, {name}! Let's get started.")
+print("\nHow it works:")
+print("- Read a lesson, then take its 3-question quiz.")
+print("- Quizzes include problem solving: find the error, fix the error,")
+print("  and try the code yourself.")
+print("- Pass all 7 lessons to unlock the final quiz.")
+pause("Press Enter to see the lessons...")
+transition_out("Loading the lessons...")
+
+
+# main menu (this loop repeats until the learner exits)
+while True:
+
+    # show the menu
+    clear_screen()
+    show_banner("PYTHON ZERO")
+    print("Learner:", name)
+    print("Completed:", len(completed), "of 7 lessons")
+    print("\nIn this course, we will cover the following topics:\n")
+
+    for number in range(1, 8):
+        if number in completed:
+            mark = "[X]"
+        else:
+            mark = "[ ]"
+        print(f"  {mark} {number}. {titles[number - 1]}")
+
+    print()
+    if final_passed == True:
+        print(f"  [X] 8. Final Quiz  (score: {final_score}/10)")
+    elif len(completed) == 7:
+        print("  [ ] 8. Final Quiz")
+    else:
+        print("  [-] 8. Final Quiz  (unlocks after all 7 lessons)")
+    print("      0. Exit")
+
+    # ask the learner to choose
+    choice = input("\nChoose an option: ").strip()
+
+    # check the choice (a wrong choice goes back to the menu)
+    # isdecimal() is True only when every character is a digit
+    if choice.isdecimal() == False:
+        print("\nInvalid choice. Please try again.")
+        pause()
+
+    else:
+        # the choice is a number, so we can turn it into a real number
+        number = int(choice)
+
+        # lessons 1 to 7
+        if number >= 1 and number <= 7:
+            if number == 1:
+                passed = lesson_1()
+            elif number == 2:
+                passed = lesson_2()
+            elif number == 3:
+                passed = lesson_3()
+            elif number == 4:
+                passed = lesson_4()
+            elif number == 5:
+                passed = lesson_5()
+            elif number == 6:
+                passed = lesson_6()
+            else:
+                passed = lesson_7()
+
+            # remember the lesson if the learner passed it
+            if passed == True and number not in completed:
+                completed.append(number)
+
+        # final quiz
+        elif number == 8:
+            if len(completed) == 7:
+                score = final_quiz()
+
+                clear_screen()
+                show_banner("FINAL QUIZ RESULTS")
+                print(f"\nYou scored {score} out of 10.")
+
+                if score >= FINAL_PASS_MARK:
+                    if final_passed == False:
+                        final_passed = True
+                        final_score = score
+                    print("\nCongratulations! You completed the PYTHON ZERO knowledge hub.")
+                    pause("Press Enter to see your certificate...")
+                    make_certificate(name, score, time.strftime("%B %d, %Y"))
+                else:
+                    print("\nNot enough to pass this time.")
+                    print("Review the lessons and try the final quiz again.")
+
+                pause("Press Enter to go back to the menu...")
+                transition_out("Returning to the menu...")
+            else:
+                print("\nThe final quiz unlocks after you pass all 7 lessons.")
+                pause()
+
+        # exit
+        elif number == 0:
+            transition_out("Thank you for learning with Python Zero")
+            print(f"See you next time, {name}!")
+            break
+
+        # any other number
+        else:
+            print("\nInvalid choice. Please try again.")
+            pause()
